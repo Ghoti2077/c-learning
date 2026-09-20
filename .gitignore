@@ -1,0 +1,14 @@
+# === Obsidian 本地配置（每台电脑不同，不上传）===
+.obsidian/
+
+# === Python 缓存 ===
+__pycache__/
+*.pyc
+
+# === 工具状态文件 ===
+_tools/.tick
+
+# === 系统垃圾 ===
+Thumbs.db
+desktop.ini
+.DS_Store
