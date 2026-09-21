@@ -45,7 +45,10 @@ def check():
     broken, miss_img = set(), set()
     for p in mds:
         t = open(p, encoding="utf-8", errors="ignore").read()
-        if "<details>" in t:
+        # 去掉行内代码 `...` 和 ``` 代码块后再查，避免"文章里提到 <details> 这个词"被误判
+        body = re.sub(r"```.*?```", "", t, flags=re.S)
+        body = re.sub(r"`[^`\n]*`", "", body)
+        if "<details>" in body:
             probs.append(f"HTML details 残留: {os.path.basename(p)}")
         for m in re.finditer(r"!\[\[([^\]\|]+)", t):
             if m.group(1).strip() not in imgs:
