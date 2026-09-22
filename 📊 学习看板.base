@@ -1,33 +1,29 @@
-# 📊 C 语言学习看板
-# 数据来源：各笔记的 frontmatter 属性（type / lesson / date / status / tags）
-# 用法：在 Obsidian 里直接打开本文件，或 ![[📊 学习看板.base#视图名]] 嵌入
-
 filters:
   and:
-    - 'type == "lesson"'
-
+    - type == "lesson"
 formulas:
-  lesson_label: 'if(lesson, "L" + lesson.toString(), "")'
-  status_icon: 'if(status == "预习", "🅿️ 预习", "✅ 已学")'
-  days_ago: 'if(date, (today() - date(date)).days, "")'
-
+  lesson_label: if(lesson, "L" + lesson.toString(), "")
+  status_icon: if(status == "预习", "🅿️ 预习", "✅ 已学")
+  days_ago: if(date, (today() - date(date)).days, "")
 properties:
   formula.lesson_label:
-    displayName: "课"
+    displayName: 课
   title:
-    displayName: "标题"
+    displayName: 标题
   date:
-    displayName: "学习日期"
+    displayName: 学习日期
   formula.status_icon:
-    displayName: "状态"
+    displayName: 状态
   formula.days_ago:
-    displayName: "距今天数"
+    displayName: 距今天数
   tags:
-    displayName: "标签"
-
+    displayName: 标签
 views:
   - type: table
-    name: "📚 课程总表"
+    name: 📚 课程总表
+    groupBy:
+      property: status
+      direction: ASC
     order:
       - formula.lesson_label
       - title
@@ -35,29 +31,24 @@ views:
       - formula.status_icon
       - formula.days_ago
       - tags
-    groupBy:
-      property: status
-      direction: ASC
-
   - type: table
-    name: "🅿️ 待复习（预习中）"
+    name: 🅿️ 待复习（预习中）
     filters:
       and:
-        - 'status == "预习"'
+        - status == "预习"
     order:
       - formula.lesson_label
       - title
       - date
       - formula.days_ago
-
   - type: table
-    name: "🕐 最近 10 课"
-    limit: 10
+    name: 🕐 最近 10 课
+    groupBy:
+      property: date
+      direction: DESC
     order:
       - formula.lesson_label
       - title
       - date
       - formula.status_icon
-    groupBy:
-      property: date
-      direction: DESC
+    limit: 10
