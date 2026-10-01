@@ -2,17 +2,16 @@
 title: "STM32-CLion 环境交接（给新对话）"
 type: tool
 lesson: L32
-date: 2026-10-01
+date: 2026-10-02
 tags: [嵌入式, STM32, CLion, OpenOCD, 交接]
 status: 已完成
 ---
 # STM32-CLion 环境交接（给新对话用）
 
-> **新会话请先读这一份。** 环境是 2026-10-01 用另一个助手（WorkBuddy）配好的，
-> 本文档由 Hermes 在 **2026-10-01 逐条复核过**，**2026-10-02 又复核了一遍**（下面每一条都附了真实输出）。
+> **新会话请先读这一份。** 环境 2026-10-01 用另一个助手（WorkBuddy）配好，Hermes 2026-10-01 / **2026-10-02 两次逐条复核**（每条附真实输出）。
 >
-> **一句话状态**：**软件环境全部就绪、`blink.elf` 已编译、CLion 烧录配置已建好**；
-> **只剩一件事：插上 ST-Link 真机烧录**（2026-10-02 实测：USB 设备列表里没有 ST-Link、`openocd init` 报 `Error: open failed` → **线还没插**）。
+> **一句话状态（2026-10-02）**：**全通了 ✅** —— 工具链齐、编译通过、**ST-Link 驱动已装、真机烧录成功并校验 OK、LED 已跑起来**。
+> 下一步：把 C 语言的知识点搬到板子上验证（板上 `sizeof` 字节数、`printf` 串口输出…）。
 
 ---
 
@@ -20,15 +19,16 @@ status: 已完成
 
 | | |
 |---|---|
-| 板子 | **STM32F103C8T6**（蓝板/Blue Pill），LQFP48，标称 64KB Flash / 20KB RAM |
+| 板子 | **STM32F103C8T6**（蓝板/Blue Pill，最小系统板），LQFP48 |
+| 芯片实测 | `device id = 0x20036410`、**`flash size = 64 KiB`**（OpenOCD 实测，真 64KB） |
 | 工程目录 | `D:\work\STM32\projects\blink` |
 | 芯片配置 | `Mcu.UserName = STM32F103C8Tx`，固件包 **STM32Cube FW_F1 V1.8.7** |
-| 固件包本地位置 | `C:\Users\Ghoti\STM32Cube\Repository\STM32Cube_FW_F1_V1.8.7` |
+| 固件包本地位置 | `C:\Users\Ghoti\STM32Cube\Repository\STM32Cube_FW_F1_V1.8.7`（**不用再联网下**） |
 | 编译产物 | `D:\work\STM32\projects\blink\build\Debug\blink.elf` |
 | 板级 cfg | `D:\work\STM32\projects\blink\stm32f103c8_blue_pill.cfg` |
 | 链接脚本 | `D:\work\STM32\projects\blink\STM32F103xx_FLASH.ld` |
 
-**工程文件清单**（实测 `ls`）：`blink.ioc`、`Core/`、`Drivers/`、`cmake/`、`CMakeLists.txt`、`CMakePresets.json`（preset 名：`default` / `Debug` / `Release`）、`startup_stm32f103xb.s`、`stm32f103c8_blue_pill.cfg`、`STM32F103xx_FLASH.ld`
+**工程文件清单**（实测 `ls`）：`blink.ioc`、`Core/`、`Drivers/`、`cmake/`、`CMakeLists.txt`、`CMakePresets.json`（preset：`default` / `Debug` / `Release`）、`startup_stm32f103xb.s`、`stm32f103c8_blue_pill.cfg`、`STM32F103xx_FLASH.ld`
 
 ---
 
@@ -39,6 +39,7 @@ status: 已完成
 | **STM32CubeMX** | **6.18.1**（exe 112,297,960 字节 ≈107MB，**自带 jre，不用装 JDK**） | `D:\work\STM32\STM32CubeMX\STM32CubeMX.exe` |
 | **OpenOCD** | `Open On-Chip Debugger 0.12.0 (2026-03-02)`（sysprogs 版） | `D:\work\Toolchains\OpenOCD-20260302-0.12.0\` |
 | **ARM GNU Toolchain** | `arm-none-eabi-gcc.exe (Arm GNU Toolchain 14.3.Rel1 (Build arm-14.174)) 14.3.1 20250623`；gdb 15.2 | `D:\work\Toolchains\arm-gnu-toolchain-14.3.rel1\` |
+| **ST-Link 驱动** | ✅ **2026-10-02 装好**（管理员跑 `drivers\ST-Link\dpinst_amd64.exe`） | 见第 5 节坑 9 |
 | CLion | 2026.1（中文界面） | `D:\APP\Clian\CLion 2026.1` |
 
 **用户级 PATH 已写入这两条**（实测 `reg query HKCU\Environment` 能看到）：
@@ -48,10 +49,9 @@ D:\work\Toolchains\OpenOCD-20260302-0.12.0\bin
 D:\work\Toolchains\arm-gnu-toolchain-14.3.rel1\bin
 ```
 
-**CLion 里已配**：`.idea\debugServers\ST_LINK.xml` 存在（ST-LINK 调试目标、SWD、GDB 端口 61234）。
+**CLion 里已配**：`.idea\debugServers\ST_LINK.xml`（ST-LINK 调试目标、SWD、GDB 端口 61234）。
 
-**运行时配置 —— 已建好 ✅**（2026-10-02 复核；交接单原先写"还没建"**已过时**）：
-存在 **`.idea\workspace.xml`** 的 `<component name="RunManager">` 里（不在 `.idea\runConfigurations\`，那个目录仍然不存在，属正常）：
+**运行时配置在 `.idea\workspace.xml` 的 `<component name="RunManager">` 里**（不在 `.idea\runConfigurations\`，那目录不存在属正常）：
 
 ```
 configuration name="blink 烧录"
@@ -60,8 +60,6 @@ configuration name="blink 烧录"
   board-config = D:\work\STM32\projects\blink\stm32f103c8_blue_pill.cfg
   gdb-port  = 3333   telnet-port = 4444   reset-type = INIT
 ```
-
-→ **第 3 节第一步「建配置」已经完成，直接跳到第二步（插线烧录）。**
 
 ---
 
@@ -73,37 +71,67 @@ arm-none-eabi-size build/Debug/blink.elf
    3616        12      1572      5200      1450
 ```
 
-→ **Flash ≈ 3.6 KB（3616+12）/ 64 KB**，**RAM ≈ 1.6 KB（bss）/ 20 KB** —— 板子绰绰有余。
+→ **Flash ≈ 3.6 KB / 64 KB**，**RAM ≈ 1.6 KB / 20 KB**。
 （`blink.elf` 本体 639,592 字节，2026-10-01 04:17 生成。）
 
 ---
 
-## 3. 接下来要做的（新会话照这个走）
+## 3. 真机烧录 —— ✅ **2026-10-02 成功**
 
-### ~~第一步：CLion 里建"OpenOCD 下载并运行"配置~~ ✅ **已完成**（见第 1 节）
+**不需要 CLion，一条命令就能烧**（推荐先用它排除问题）：
 
-原步骤留存备查：
+```bash
+cd /d/work/STM32/projects/blink
+openocd -f interface/stlink.cfg -c "transport select swd" -f target/stm32f1x.cfg \
+        -c "program build/Debug/blink.elf verify reset exit"
+```
 
-1. CLion 右上角配置下拉 → **编辑配置（Edit Configurations）**
-2. 左上 `+` → 选 **OpenOCD 下载并运行（OpenOCD Download & Run）**
-3. **可执行的二进制文件**：选 `D:\work\STM32\projects\blink\build\Debug\blink.elf`
-4. **面板配置文件（Board config file）**：选工程里的 `stm32f103c8_blue_pill.cfg`
-5. 保存
+**成功输出（实测原样）：**
 
-### 第二步：插 ST-Link 真机烧录 ← **现在就差这一步**
+```
+Info : STLINK V2J37S7 (API v2) VID:PID 0483:3748
+Info : Target voltage: 3.237097
+Info : SWD DPIDR 0x1ba01477
+Info : [stm32f1x.cpu] Cortex-M3 r1p1 processor detected
+Info : [stm32f1x.cpu] target has 6 breakpoints, 4 watchpoints
+Info : [stm32f1x.cpu] Examination succeed
+Info : device id = 0x20036410
+Info : flash size = 64 KiB
+** Programming Finished **
+** Verify Started **
+** Verified OK **
+** Resetting Target **
+Error: Fail reading CTRL/STAT register. Force reconnect      ← 见第 5 节坑 8，无害
+```
 
-**2026-10-02 实测：ST-Link 还没插**（证据：① `Get-PnpDevice` 的 USB 设备列表里没有 ST-Link 相关设备，只有蓝牙串口 COM3/COM4；② `openocd -f interface/stlink.cfg -c "transport select dapdirect_swd" -c "init"` → **`Error: open failed`**）。
+**只连不烧**（想确认调试器通不通时用）：
 
-1. **插线**：ST-Link 的 **SWCLK / SWDIO 与板上标注是反的**（交叉接），GND 对 GND、3.3V 对 3.3V（接错连不上）
-2. 先只插 **ST-Link 的 USB 到电脑**，在设备管理器确认它被认出来（若显示"未知设备"：管理员运行
-   `D:\work\Toolchains\OpenOCD-20260302-0.12.0\drivers\ST-Link\stlink_winusb_install.bat`）
-3. 可以用一条命令先自检调试器能不能连上（不需要 CLion）：
-   ```
-   openocd -f interface/stlink.cfg -c "transport select dapdirect_swd" -c "init" -c "shutdown"
-   ```
-   出现 `STLINK` / target 信息 = 通了；`Error: open failed` = 调试器没插好或驱动没装
-4. CLion 里选 **`blink 烧录`** 这个配置 → 点烧录/调试
-5. **成功标志**：蓝板的 LED（PC13）开始闪（蓝板 LED 是**低电平点亮**）
+```bash
+openocd -f interface/stlink.cfg -c "transport select swd" -f target/stm32f1x.cfg -c "init; targets; shutdown"
+```
+
+**CLion 里**：右上角配置选 **`blink 烧录`** → 点烧录/调试。
+
+**成功标志**：蓝板的 LED（**PC13**）开始闪 —— 蓝板 LED 是**低电平点亮**。
+
+### 接线规则（这次卡了半天，记住）
+
+**蓝板 4 针 SWD 头**（在 **USB 口的另一端**，丝印从上到下）：
+
+| 板上丝印 | 信号 | 芯片引脚 |
+|---|---|---|
+| `3V3` | 电源 | +3.3V |
+| `DIO` | **SWDIO** | PA13 |
+| `CLK` | **SWCLK** | PA14 |
+| `GND` | 地 | GND |
+
+ST-Link 那头的 10 孔：`RST / SWCLK / SWIM / SWDIO / GND / 3.3V / 5V`
+
+> ⚠️ **按丝印名字接，绝不按位置一排对一排插！**
+> 克隆版 ST-Link 的 4 线排线顺序常是 `RST-SWCLK-SWDIO-GND`，板子是 `3V3-DIO-CLK-GND` ——
+> 位置对位置插过去 = **SWDIO 和 SWCLK 接反** = `Error: init mode failed (unable to connect to the target)`。（本次真实踩坑，改对后立刻通）
+
+可选：`RST` 接到板子 `NRST`（提高连不上的成功率）；**板子已用 USB 供电时，ST-Link 的 3.3V 可以不接**，避免两个电源打架。
 
 ---
 
@@ -111,39 +139,50 @@ arm-none-eabi-size build/Debug/blink.elf
 
 | 教程说要改 | 本机实际情况 | 结论 |
 |---|---|---|
-| 把 `.cfg` 里 `reset_config srst_only` 改成 `reset_config none` | 本机 `share/openocd/scripts/target/stm32f1x.cfg:72` 已经是 **`reset_config srst_nogate`** | ✅ **不用改**（如果哪天真连不上，再回来加 `reset_config none` 也不迟） |
-| 删掉 `.ld` 里的 `READONLY`（5 处） | 实测 5 处分别在 **106 / 113 / 122 / 131 / 141 行**，注释写着"GCC11 及以后支持"；本机是 **GCC 14.3.1** | ✅ **不用删** |
+| 把 `.cfg` 里 `reset_config srst_only` 改成 `reset_config none` | `share/openocd/scripts/target/stm32f1x.cfg:72` 已经是 **`reset_config srst_nogate`** | ✅ 不用改 |
+| 删掉 `.ld` 里的 `READONLY`（5 处） | 实测在 **106 / 113 / 122 / 131 / 141 行**，注释写着"GCC11 及以后支持"；本机 **GCC 14.3.1** | ✅ 不用删 |
 
 ---
 
-## 5. 已知坑（都是踩过的，别再踩）
+## 5. 已知坑（都实测踩过，按序号查）
 
-1. **在 git-bash/MSYS 里调 `arm-none-eabi-size.exe` 时，路径必须写 `D:/work/...` 这种 Windows 风格**——写 `/d/work/...` 会报 `No such file`（我复核时就踩了这个）。
+1. **在 git-bash/MSYS 里调 `arm-none-eabi-size.exe`，路径必须写 `D:/work/...`（Windows 风格）** —— 写 `/d/work/...` 报 `No such file`。
 2. `openocd -v` 把版本打到 **stderr**，PowerShell 里显示红色不一定是错。
-3. CubeMX 安装时**路径输入框会自带一个尾随空格** → 报 `Could not create directory: ...\STM32CubeMX \help`；清空重输即可。
-4. 板级 cfg 里有 `set FLASH_SIZE 0x20000`（**强制按 128KB 处理**）。C8 标称 64KB，但很多人实测能写满 128KB —— 用不满就不用管。
-5. 走 CMakePresets 时构建目录是 **`build\Debug`**，不是 `cmake-build-debug`（找 elf 别找错地方）。
+3. CubeMX 安装时**路径输入框自带尾随空格** → 报 `Could not create directory: ...\STM32CubeMX \help`；清空重输。
+4. 板级 cfg 里有 `set FLASH_SIZE 0x20000`（强制按 128KB 处理）；实测芯片是 64KB，用不满就不用管。
+5. 走 CMakePresets 时构建目录是 **`build\Debug`**，不是 `cmake-build-debug`。
 6. 固件包仓库里还留着一个 `stm32cube_fw_f1_v180.zip`（**可删**）。
-7. **`openocd -c "init"` 直接跑会报 `Error: Unsupported transport`** —— st-link 的 cfg 里没有默认 transport，**必须自己加 `-c "transport select dapdirect_swd"`**（新版驱动用 `dapdirect_swd`；`hla_swd` 会报 `Debug adapter doesn't support 'hla_swd' transport`）。（2026-10-02 实测）
+7. **transport 的名字**：`openocd -c "init"` 直接跑会报 `Error: Unsupported transport` —— st-link 的 cfg **没默认 transport**，必须自己加 `-c "transport select swd"`。
+   （新版 OpenOCD 里 `dapdirect_swd` **已废弃**，会警告 `DEPRECATED! use 'transport select swd'`。）
+   （另：`hla_swd` 会报 `Debug adapter doesn't support 'hla_swd' transport`。）
+8. **烧完那句 `Error: Fail reading CTRL/STAT register. Force reconnect` / `DP initialisation failed`** —— 出现在 `** Resetting Target **` **之后**，是复位瞬间 SWD 掉线的毛刺，**烧写和校验早已成功**，无害。
+9. **ST-Link 驱动**：刚插上时设备管理器里 `STM32 STLink` 是**黄色感叹号**、`Problem = CM_PROB_FAILED_INSTALL`，OpenOCD 报 `Error: open failed`（此时连 `Target voltage` 都读不到，只能看到 STLINK 那行都读不到）。
+   装法：**管理员身份**运行 `D:\work\Toolchains\OpenOCD-20260302-0.12.0\drivers\ST-Link\dpinst_amd64.exe`（或 `pnputil /add-driver ...\stlink_dbg_winusb.inf /install`）。
+   装好后：`Status: OK`、`Problem: CM_PROB_NONE`、`Class: USBDevice`。
+   > 本机 `Ghoti` 属管理员组但**会话是标准令牌**（UAC 过滤），后台提权会静默失败 —— **必须用户自己开管理员 PowerShell** 粘贴命令。
+10. **`0x1ba01477` 是 Cortex-M3 的 DP ID** —— 看到它 + `Cortex-M3 r1p1 processor detected` 就说明 SWD 通了。
+    **注意：`Target voltage` 读到 ~3.24V ≠ SWD 通**（那只说明 3.3V/GND 接上了），`Error: init mode failed` 通常是 SWDIO/SWCLK 接反。
+11. 诊断阶梯（按顺序试，别乱猜）：① 设备管理器看驱动 `Problem` ② `openocd … -c "init; targets; shutdown"` 看有没有 `DPIDR` ③ 有 `Target voltage` 但 `init mode failed` → **先查接线** ④ 仍不行再降速 `adapter speed 100` / 加 `connect_assert_srst`。
 
 ---
 
 ## 6. 网络注意
 
-- 本机 `www.st.com` 被拦（curl 返回 **HTTP 567**，`microsoft.com` 正常）—— CubeMX 已经装好了，**但如果以后要在 CubeMX 里在线更新固件包、或重新登录 myST 账号，可能还需要开加速器**。
-- F1 的固件包**已经下好了**（见第 0 节路径），短期不需要再下东西。
+- 本机 `www.st.com` 被拦（curl 返回 **HTTP 567**，`microsoft.com` 正常）—— CubeMX 已装好；**以后要在 CubeMX 里在线更新固件包/登录 myST 账号可能要开加速器**。
+- F1 固件包**已下好**，短期不需要再联网。
 
 ---
 
 ## 7. 教这个用户时的规矩（给新会话，别偷懒）
 
-- 他是 **C 语言初学者**（学到循环 + 分支 + 函数一点），STM32 属于 **"并轨提前动手"**——**别默认他懂指针、结构体、寄存器**。
+- 他是 **C 语言初学者**（学到 分支/循环/switch/break-continue/浮点/拆位；**指针、数组、函数还没学**），STM32 是 **"并轨提前动手"** —— **别默认他懂指针、结构体、寄存器**。
 - **讲解必须大白话 + 打比方 + 逐行解释**；超纲内容他说"先不用解释了"就**立刻收手**，记进待办。
 - **凡是我说"实测/跑过"，必须把源码贴出来**（他明确要求过）。
-- C 语言那边的完整交接在 **`D:\APP\hermes\c-learning\_交接.md`**（进度/欠账以它为准），教学流程/坑点在 **`c-learning-plan` 技能**里。
-- 他欠着的复习题（L16/L17/L30/L31）**不催**，都记在 `📌 待办与欠账.md`。
+- C 语言完整交接在 **`D:\APP\hermes\c-learning\_交接.md`**（进度/欠账以它为准）；教学流程/坑点在 **`c-learning-plan` 技能**。
+- 他欠的复习题（L16/L17/L30/L31）**不催**，记在 `📌 待办与欠账.md`。
 
 ## 相关
-- [[STM32 环境准备（我买了 F103C8T6）]]（板子参数、CubeMX 一代 vs MX2 的区别）
+- [[STM32 环境准备（我买了 F103C8T6）]]（板子参数、CubeMX 一代 vs MX2）
+- [[STM32-CLion 环境配置记录（WorkBuddy 原始）]]（原始记录，存档）
+- [[L10 sizeof（关键字、操作符、字节与比特）]]（**下一个上板验证项**：板上 `int`/`char` 实际字节数）
 - [[📌 待办与欠账]]（上板验证清单）
-- [[L10 sizeof（关键字、操作符、字节与比特）]]（上板后要验证 `int`/`char` 的实际字节数）
