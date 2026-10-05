@@ -17,7 +17,7 @@ def info(path):
     m = re.search(r"^#\s+(.+)$", t, re.M)
     if m:
         title = m.group(1).strip()
-    d = re.search(r"^-\s*日期：\s*(\S+)", t, re.M)
+    d = re.search(r"^-\s*日期：\s*(\S+)", t, re.M) or re.search(r"^date:\s*(\S+)", t, re.M)
     s = re.search(r"^>\s*\*\*一句话总结\*\*：\s*(.+)$", t, re.M)
     flag = ""
     if "🅿️ **状态：先放着" in t or "🅿️ **状态：预习" in t:
@@ -41,7 +41,7 @@ def natural_key(name):
 
 
 def build():
-    rows, tools = [], []
+    rows, tools, exams = [], [], []
     for p in glob.glob(os.path.join(VAULT, "**", "*.md"), recursive=True):
         rel = os.path.relpath(p, VAULT)
         if any(rel.startswith(d) for d in SKIP_DIRS):
@@ -49,9 +49,16 @@ def build():
         if os.path.basename(p).startswith(("🏠", "❌", "📌")):
             continue
         i = info(p)
-        (rows if re.match(r"L\d+", os.path.basename(p)) else tools).append(i)
+        # 05-实战与考试/ 单独成区（笔试、实战记录，不算课程进度）
+        if rel.startswith("05-"):
+            exams.append(i)
+        elif re.match(r"L\d+", os.path.basename(p)):
+            rows.append(i)
+        else:
+            tools.append(i)
     rows.sort(key=lambda x: natural_key(x["file"]))
     tools.sort(key=lambda x: natural_key(x["file"]))
+    exams.sort(key=lambda x: natural_key(x["file"]))
 
     L = []
     L.append("# 🏠 C 学习首页\n")
@@ -75,6 +82,11 @@ def build():
         short = re.sub(r"\s*[（(].*$", "", name)
         L.append("| [[%s\\|%s]] | %s | %s | %s |" % (name, short, r["date"], r["sum"], r["flag"]))
     L.append("")
+    if exams:
+        L.append("## 🎯 实战与考试（%d 篇）\n" % len(exams))
+        for r in exams:
+            L.append("- [[%s|%s]]：%s" % (r["file"][:-3], r["title"], r["sum"]))
+        L.append("")
     if tools:
         L.append("## 🛠 工具与排错\n")
         for r in tools:
