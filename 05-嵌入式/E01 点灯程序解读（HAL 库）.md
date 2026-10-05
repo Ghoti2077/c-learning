@@ -2,13 +2,13 @@
 title: "E01 点灯程序逐行解读（用的全是 CubeMX 生成的 HAL 库）"
 type: lesson
 lesson: E01
-date: 2026-10-01
+date: 2026-10-05
 tags: [嵌入式, STM32, HAL, 点灯, CLion]
 status: 已完成
 ---
 # E01 点灯程序解读：全是用 HAL 库函数（CubeMX 生成）
 
-- 日期：2026-10-01
+- 日期：2026-10-05（工程是 2026-10-01 配好的）
 - 来源：我的第一个 STM32 工程 `D:\work\STM32\projects\blink`（CubeMX 生成 + CLion 编译）
 - 我的问题（原话）：「我的点灯程序，你是用 **CubeMX 里生成的 HAL 库函数**吗」
 - 标签：`#嵌入式` `#STM32` `#HAL` `#点灯`
