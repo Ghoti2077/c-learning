@@ -8,7 +8,8 @@ import os, re, glob
 
 VAULT = r"D:\APP\hermes\c-learning"
 OUT = os.path.join(VAULT, "🏠 C学习首页.md")
-SKIP_DIRS = ("_附件", "_tools", ".obsidian")
+SKIP_DIRS = ("_附件", "_tools", ".obsidian", "_交接归档")
+PROB_DIR = os.path.join("05-实战与考试", "题目")
 
 
 def info(path):
@@ -41,24 +42,30 @@ def natural_key(name):
 
 
 def build():
-    rows, tools, exams = [], [], []
+    rows, emb, tools, exams, probs = [], [], [], [], []
     for p in glob.glob(os.path.join(VAULT, "**", "*.md"), recursive=True):
         rel = os.path.relpath(p, VAULT)
         if any(rel.startswith(d) for d in SKIP_DIRS):
             continue
-        if os.path.basename(p).startswith(("🏠", "❌", "📌")):
-            continue
+        base = os.path.basename(p)
+        if base.startswith(("🏠", "❌", "📌", "_")) or "草稿" in base:
+            continue          # 草稿类（如 E09 帖子草稿）不算课
         i = info(p)
-        # 05-实战与考试/ 单独成区（笔试、实战记录，不算课程进度）
-        if rel.startswith("05-"):
-            exams.append(i)
-        elif re.match(r"L\d+", os.path.basename(p)):
-            rows.append(i)
+        if rel.startswith(PROB_DIR):
+            probs.append(i)                       # 每题一页：只计数
+        elif rel.startswith("05-嵌入式"):
+            emb.append(i)                         # STM32 单独一区
+        elif rel.startswith("05-"):
+            exams.append(i)                       # 笔试、刷题总表等
+        elif re.match(r"L\d+", base):
+            rows.append(i)                        # C 语言课
         else:
             tools.append(i)
     rows.sort(key=lambda x: natural_key(x["file"]))
+    emb.sort(key=lambda x: natural_key(x["file"]))
     tools.sort(key=lambda x: natural_key(x["file"]))
     exams.sort(key=lambda x: natural_key(x["file"]))
+    probs.sort(key=lambda x: natural_key(x["file"]))
 
     L = []
     L.append("# 🏠 C 学习首页\n")
@@ -71,10 +78,10 @@ def build():
     if os.path.exists(tp):
         todo = len(re.findall(r"^- \[ \]", open(tp, encoding="utf-8").read(), re.M))
     L.append("> 自动生成的总结索引（每 5 次对话刷新一次）。**点标题进笔记，别在文件树里翻。**\n")
-    L.append("**进度**：已学 %d 课 ｜ 易错点 %d 条 ｜ 待办 %d 项 ｜ 附件 %d 张\n" % (
-        len(rows), errs, todo,
+    L.append("**进度**：C 语言 %d 课 ｜ STM32 %d 课 ｜ 刷题 %d 题 ｜ 易错点 %d 条 ｜ 待办 %d 项 ｜ 附件 %d 张\n" % (
+        len(rows), len(emb), len(probs), errs, todo,
         len(os.listdir(os.path.join(VAULT, "_附件"))) if os.path.isdir(os.path.join(VAULT, "_附件")) else 0))
-    L.append("## 📚 课程笔记（%d 课）\n" % len(rows))
+    L.append("## 📚 C 语言课程笔记（%d 课）\n" % len(rows))
     L.append("| 课 | 日期 | 一句话总结 | 状态 |")
     L.append("|---|---|---|---|")
     for r in rows:
@@ -82,11 +89,26 @@ def build():
         short = re.sub(r"\s*[（(].*$", "", name)
         L.append("| [[%s\\|%s]] | %s | %s | %s |" % (name, short, r["date"], r["sum"], r["flag"]))
     L.append("")
+
+    if emb:
+        L.append("## 🔌 嵌入式 · STM32（%d 课）\n" % len(emb))
+        L.append("| 课 | 日期 | 一句话总结 | 状态 |")
+        L.append("|---|---|---|---|")
+        for r in emb:
+            name = r["file"][:-3]
+            short = re.sub(r"\s*[（(].*$", "", name)
+            L.append("| [[%s\\|%s]] | %s | %s | %s |" % (name, short, r["date"], r["sum"], r["flag"]))
+        L.append("")
+
     if exams:
         L.append("## 🎯 实战与考试（%d 篇）\n" % len(exams))
         for r in exams:
             L.append("- [[%s|%s]]：%s" % (r["file"][:-3], r["title"], r["sum"]))
         L.append("")
+    L.append("## 🧩 刷题（做过的题各占一页）\n")
+    L.append("- 🎯 [[🎯 刷题总表]] —— 题号 / 链接 / 状态 / 日期都在那张表里；题目页共 **%d** 页，点总表里的内链跳过去" % len(probs))
+    L.append("")
+
     if tools:
         L.append("## 🛠 工具与排错\n")
         for r in tools:
@@ -95,8 +117,8 @@ def build():
     L.append("## 🧭 常用入口\n")
     L.append("- ❌ [[❌ 我的易错点清单]] —— 复习先看这张表")
     L.append("- 📌 [[📌 待办与欠账]] —— 欠着的作业 / 还没搞懂的问题")
-    L.append("- 📊 [[📊 学习看板.base]] —— 数据库视图（筛选 / 分组 / 统计，Obsidian 1.9+）")
-    L.append("- 🗺️ [[🗺️ C语言知识地图.canvas]] —— 可视化学习路线（已学 → 下一站 → 嵌入式）")
+    L.append("- 🎯 [[🎯 刷题总表]] —— 刷题主页（题号 / 链接 / 状态）")
+    L.append("- 🔁 [[📌 抽查池（间隔复习）]] —— 间隔复习登记处")
     L.append("- 🖼 `_附件/` —— 所有原始截图（课件 + VS 实测）")
     L.append("- 🔁 `_tools/check_vault.py` —— 库体检 + 刷新本页（每 5 次对话自动跑）")
     L.append("")
