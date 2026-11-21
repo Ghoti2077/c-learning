@@ -48,7 +48,7 @@ def build():
         if any(rel.startswith(d) for d in SKIP_DIRS):
             continue
         base = os.path.basename(p)
-        if base.startswith(("🏠", "❌", "📌", "_")) or "草稿" in base:
+        if base.startswith(("🏠", "❌", "📌", "_", "🧠")) or "草稿" in base:
             continue          # 草稿类（如 E09 帖子草稿）不算课
         i = info(p)
         if rel.startswith(PROB_DIR):
@@ -118,6 +118,7 @@ def build():
     L.append("- ❌ [[❌ 我的易错点清单]] —— 复习先看这张表")
     L.append("- 📌 [[📌 待办与欠账]] —— 欠着的作业 / 还没搞懂的问题")
     L.append("- 🎯 [[🎯 刷题总表]] —— 刷题主页（题号 / 链接 / 状态）")
+    L.append("- 🧠 [[🧠 写代码的经验]] —— 动手前扫一眼的动作清单（踩过的坑都在上面）")
     L.append("- 🔁 [[📌 抽查池（间隔复习）]] —— 间隔复习登记处")
     L.append("- 🖼 `_附件/` —— 所有原始截图（课件 + VS 实测）")
     L.append("- 🔁 `_tools/check_vault.py` —— 库体检 + 刷新本页（每 5 次对话自动跑）")
